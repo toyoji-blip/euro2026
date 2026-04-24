@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>旅行行程 2026</title>
+<style>
+/* Google Fontsが読み込めない場合のフォールバック付き */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+:root {
+  --ink: #1a1610;
+  --rust: #c0533a;
+  --gold: #c9a84c;
+  --sage: #5a7a6a;
+  --slate: #3d4a5c;
+  --cream: #f5f0e8;
+  --paper: #faf7f0;
+  --muted: #8a7e6e;
+  --border: #e0d9cc;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  /* システムフォントをフォールバックに追加 */
+  font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'YuGothic', 'Yu Gothic', Meiryo, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  /* スクロール改善 */
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+/* ===== HEADER ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  border-bottom: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon { font-size: 1.5rem; flex-shrink: 0; }
+.header-text { flex: 1; min-width: 0; }
+.header-title {
+  font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+.header-sub { font-size: 0.65rem; color: var(--gold); letter-spacing: 1px; margin-top: 2px; }
+
+.overview-btn {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+  /* タッチ操作改善 */
+  -webkit-appearance: none;
+  touch-action: manipulation;
+}
+
+/* ===== LEGEND ===== */
+.legend {
+  display: flex;
+  gap: 14px;
+  padding: 7px 16px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+.legend-item { display:flex; align-items:center; gap:5px; font-size:0.68rem; color:var(--muted); }
+.ldot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* ===== DAY LIST ===== */
+.day-list { padding: 10px 12px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+
+/* ===== DAY CARD ===== */
+.day-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.day-card.active { border-color: var(--rust); }
+
+.day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--ink);
+  color: var(--cream);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  /* タッチ操作改善 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* 最小タップ領域を確保 */
+  min-height: 56px;
+}
+.day-card.active .day-header { background: var(--rust); }
+
+.day-num {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.day-meta { flex: 1; min-width: 0; }
+.day-date { font-size: 0.67rem; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 2px; }
+.day-location {
+  font-size: 0.87rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.day-card.active .chevron { transform: rotate(180deg); }
+
+/* ===== BODY ===== */
+.day-body {
+  display: none;
+  padding: 10px 12px 0;
+}
+.day-card.active .day-body { display: block; }
+
+.stop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.82rem;
+}
+.stop-item:last-child { border-bottom: none; }
+
+.sdot { width:9px; height:9px; border-radius:50%; background:var(--rust); margin-top:4px; flex-shrink:0; }
+.sdot.hotel { background: var(--sage); }
+.sdot.transit { background: var(--slate); }
+
+.sname { flex:1; line-height:1.4; color:var(--ink); }
+.stime { font-size:0.72rem; color:var(--muted); white-space:nowrap; padding-top:2px; }
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 12px;
+}
+
+.abtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-appearance: none;
+}
+.abtn:active { opacity: 0.75; }
+.abtn-maps { background: var(--rust); color: white; }
+
+/* ===== SEGMENT ROUTE LINK ===== */
+.seg-link-wrap {
+  padding: 3px 0 3px 17px;
+  display: flex;
+  align-items: center;
+}
+.seg-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-size: 0.72rem;
+  color: var(--slate);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  touch-action: manipulation;
+  transition: background 0.15s, color 0.15s;
+}
+.seg-link:active { background: var(--slate); color: white; }
+.seg-arrow {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+/* ===== MODAL ===== */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  align-items: flex-end;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  padding: 20px 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-handle {
+  width: 36px; height:4px; background:#ccc;
+  border-radius:2px; margin:0 auto 16px;
+}
+.modal-title { font-family:'Playfair Display','Georgia',serif; font-size:1.3rem; margin-bottom:4px; }
+.modal-sub { font-size:0.77rem; color:var(--muted); margin-bottom:16px; line-height:1.7; }
+
+.chips { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:20px; }
+.chip {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+.chip.hi { background:var(--rust); color:white; border-color:var(--rust); }
+
+.mbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+  touch-action: manipulation;
+  -webkit-appearance: none;
+}
+.mbtn-main { background: var(--rust); color: white; }
+.mbtn-close { background: var(--cream); color: var(--muted); }
+
+/* ===== DESKTOP ===== */
+@media (min-width: 680px) {
+  .header { padding: 16px 24px; }
+  .day-list { max-width: 560px; margin: 0 auto; padding: 16px 0 40px; }
+  .overlay { align-items: center; }
+  .modal { border-radius: 16px; max-width: 460px; margin: auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🗺</div>
+  <div class="header-text">
+    <div class="header-title">ヨーロッパ旅行 2026</div>
+    <div class="header-sub">5/31〜6/20 · 21日間 · 7カ国</div>
+  </div>
+  <button class="overview-btn" onclick="openModal()">🌍 全行程</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="ldot" style="background:var(--rust)"></div>観光</div>
+  <div class="legend-item"><div class="ldot" style="background:var(--sage)"></div>宿泊</div>
+  <div class="legend-item"><div class="ldot" style="background:var(--slate)"></div>移動</div>
+</div>
+
+<div class="day-list" id="day-list"></div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌍 全行程ルート</div>
+    <div class="modal-sub">東京 → ファロ · 21日間<br>スイス・イタリア・フランス・イギリス・スペイン・ポルトガル</div>
+    <div class="chips" id="chips"></div>
+    <a class="mbtn mbtn-main" id="gmap-btn" href="#" target="_blank">🗺 Google Mapsで全ルートを開く</a>
+    <button class="mbtn mbtn-close" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<script>
+var days = [
+  { id:1,  date:"5月31日(日)", loc:"東京 → 上海", emoji:"✈️",
+    stops:[{n:"羽田空港 (HND)",t:"transit",time:"20:00"},{n:"上海 浦東空港 (PVG)",t:"transit",time:"22:05"}],
+    wp:["Haneda Airport Tokyo","Shanghai Pudong Airport"], mode:"transit"},
+  { id:2,  date:"6月1日(月)", loc:"上海 → ジュネーブ → マルティニー", emoji:"✈️🚆",
+    stops:[{n:"上海 → ジュネーブ (MU217)",t:"transit",time:"01:30"},{n:"ジュネーブ空港 着",t:"transit",time:"07:50"},{n:"モントルー 日帰り観光",t:"stop",time:"13:05"},{n:"シヨン城 ボートツアー",t:"stop",time:"14:30"},{n:"マルティニー 宿泊",t:"hotel",time:"17:41"}],
+    wp:["Shanghai Pudong Airport","Geneva Airport Switzerland","Montreux Switzerland","Château de Chillon Switzerland","Martigny Switzerland"], mode:"transit"},
+  { id:3,  date:"6月2日(火)", loc:"グラン・サン・ベルナール峠", emoji:"🏔️",
+    stops:[{n:"マルティニー 出発",t:"transit",time:"10:51"},{n:"Orsières (バス)",t:"transit",time:"11:30"},{n:"Bourg-St-Pierre (バス)",t:"transit",time:"12:00"},{n:"徒歩: Bourg-St-Pierre → Orsières",t:"stop",time:"13:00〜16:00"},{n:"Orsières → マルティニー",t:"transit",time:"16:30"}],
+    wp:["Martigny Switzerland","Orsières Switzerland","Bourg-Saint-Pierre Switzerland","Orsières Switzerland","Martigny Switzerland"], mode:"transit"},
+  { id:4,  date:"6月3日(水)", loc:"マルティニー → ツェルマット", emoji:"🏔️",
+    stops:[{n:"マルティニー → Visp (SBB)",t:"transit",time:"09:42"},{n:"Visp → ツェルマット",t:"transit",time:"10:37"},{n:"Jugendherberge Zermatt (2泊)",t:"hotel",time:"11:50"}],
+    wp:["Martigny Switzerland","Visp Switzerland","Zermatt Switzerland"], mode:"transit"},
+  { id:5,  date:"6月4日(木)", loc:"ツェルマット 滞在", emoji:"🗻",
+    stops:[{n:"ツェルマット 自由行動・マッターホルン",t:"stop",time:"終日"},{n:"Jugendherberge Zermatt 宿",t:"hotel",time:"泊"}],
+    wp:["Zermatt Switzerland","Matterhorn Switzerland"], mode:"walking"},
+  { id:6,  date:"6月5日(金)", loc:"ツェルマット → クールマイユール", emoji:"🚠",
+    stops:[{n:"Matterhorn Alpine Crossing",t:"stop",time:"10:00"},{n:"Cervinia 着",t:"transit",time:"12:00"},{n:"Chatillon 経由",t:"transit",time:"13:05"},{n:"HOTEL CRESTA ET DUC 宿",t:"hotel",time:"16:45"}],
+    wp:["Zermatt Switzerland","Breuil-Cervinia Italy","Chatillon Aosta Valley Italy","Courmayeur Italy"], mode:"driving"},
+  { id:7,  date:"6月6日(土)", loc:"クールマイユール → シャモニー", emoji:"🚌",
+    stops:[{n:"クールマイユール → シャモニー (バス)",t:"transit",time:"16:01"},{n:"Auberge de Jeunesse HI Chamonix 宿",t:"hotel",time:"16:45"}],
+    wp:["Courmayeur Italy","Chamonix-Mont-Blanc France"], mode:"transit"},
+  { id:8,  date:"6月7日(日)", loc:"シャモニー 滞在", emoji:"⛰️",
+    stops:[{n:"シャモニー・モンブラン 自由行動",t:"stop",time:"終日"},{n:"Auberge de Jeunesse HI Chamonix 宿",t:"hotel",time:"泊"}],
+    wp:["Chamonix-Mont-Blanc France","Aiguille du Midi Chamonix France"], mode:"walking"},
+  { id:9,  date:"6月8日(月)", loc:"シャモニー → マンチェスター", emoji:"✈️",
+    stops:[{n:"Chamonix → ジュネーブ空港 送迎",t:"transit",time:"08:00"},{n:"GVA → MAN (U22186 EasyJet)",t:"transit",time:"11:20"},{n:"ibis Manchester Centre 宿",t:"hotel",time:"夜"}],
+    wp:["Chamonix France","Geneva Airport Switzerland","Manchester Airport UK"], mode:"transit"},
+  { id:10, date:"6月9日(火)", loc:"マンチェスター → ケズィック", emoji:"🚂",
+    stops:[{n:"Manchester Oxford Road → Penrith",t:"transit",time:"09:24"},{n:"Penrith → Keswick (X4バス)",t:"transit",time:"11:20"},{n:"Lindisfarne House Keswick (2泊)",t:"hotel",time:"12:01"}],
+    wp:["Manchester Oxford Road Station UK","Penrith Cumbria UK","Keswick Cumbria UK"], mode:"transit"},
+  { id:11, date:"6月10日(水)", loc:"ケズィック 滞在 (湖水地方)", emoji:"🌿",
+    stops:[{n:"Derwentwater 周辺散策",t:"stop",time:"終日"},{n:"Catbells ハイキング",t:"stop",time:""},{n:"Lindisfarne House 宿",t:"hotel",time:"泊"}],
+    wp:["Keswick Cumbria UK","Derwentwater Keswick UK","Catbells Keswick UK"], mode:"walking"},
+  { id:12, date:"6月11日(木)", loc:"ケズィック → ペンザンス", emoji:"🚂",
+    stops:[{n:"Keswick → Penrith → Lancaster",t:"transit",time:"07:51"},{n:"Lancaster → Birmingham New Street",t:"transit",time:"09:58"},{n:"Birmingham → Penzance",t:"transit",time:"12:12"},{n:"YMCA Bath (Bath途中下車も可)",t:"hotel",time:""}],
+    wp:["Keswick UK","Lancaster UK","Birmingham New Street UK","Penzance Cornwall UK"], mode:"transit"},
+  { id:13, date:"6月12日(金)", loc:"ペンザンス → ポースカーノ → エクセター", emoji:"🚌",
+    stops:[{n:"Penzance → Porthcurno (1Aバス)",t:"transit",time:"08:25"},{n:"Porthcurno 観光",t:"stop",time:"09:29〜13:07"},{n:"Penzance → Plymouth → Exeter",t:"transit",time:"14:50"},{n:"The Telstar Guest House Exeter (2泊)",t:"hotel",time:"夜"}],
+    wp:["Penzance Cornwall UK","Porthcurno Cornwall UK","Plymouth UK","Exeter Devon UK"], mode:"transit"},
+  { id:14, date:"6月13日(土)", loc:"エクスマス → サイドマス 海岸ウォーク", emoji:"🚶",
+    stops:[{n:"Exeter → Exmouth (GWR)",t:"transit",time:"08:49"},{n:"Exmouth → Sidmouth 徒歩 (南西海岸パス)",t:"stop",time:"09:00〜16:00"},{n:"Sidmouth → Exeter (9Aバス)",t:"transit",time:"17:52"},{n:"The Telstar Guest House 宿",t:"hotel",time:"泊"}],
+    wp:["Exmouth Devon UK","Budleigh Salterton Devon UK","Sidmouth Devon UK","Exeter Devon UK"], mode:"walking"},
+  { id:15, date:"6月14日(日)", loc:"エクセター → プリマス → サンタンデール", emoji:"⛴️",
+    stops:[{n:"Exeter → Paignton",t:"transit",time:"08:42"},{n:"Paignton → Plymouth",t:"transit",time:"13:30"},{n:"Plymouth → Santander フェリー (Brittany)",t:"transit",time:"16:45"}],
+    wp:["Exeter Devon UK","Paignton Devon UK","Plymouth Ferry Terminal UK"], mode:"transit"},
+  { id:16, date:"6月15日(月)", loc:"サンタンデール → ビルバオ", emoji:"🚌",
+    stops:[{n:"Santander 着 (フェリー)",t:"transit",time:"17:15"},{n:"Santander → Bilbao (ALSA バス)",t:"transit",time:"16:30"},{n:"Susanna AirBnB Bilbao (3泊)",t:"hotel",time:"夜"}],
+    wp:["Santander Spain","Bilbao Spain"], mode:"driving"},
+  { id:17, date:"6月16日(火)", loc:"ビルバオ 滞在", emoji:"🎨",
+    stops:[{n:"グッゲンハイム美術館",t:"stop",time:""},{n:"Casco Viejo 旧市街",t:"stop",time:""},{n:"Susanna 宿",t:"hotel",time:"泊"}],
+    wp:["Guggenheim Museum Bilbao Spain","Casco Viejo Bilbao Spain","Zubizuri Bridge Bilbao Spain"], mode:"walking"},
+  { id:18, date:"6月17日(水)", loc:"ビルバオ 滞在", emoji:"🏘️",
+    stops:[{n:"ビルバオ 自由行動",t:"stop",time:"終日"},{n:"Susanna 宿",t:"hotel",time:"泊"}],
+    wp:["Bilbao Spain"], mode:"walking"},
+  { id:19, date:"6月18日(木)", loc:"ビルバオ → サン・セバスティアン → パンプローナ", emoji:"🚌",
+    stops:[{n:"ビルバオ → San Sebastian (バス)",t:"transit",time:"10:13"},{n:"San Sebastian → Pamplona バス",t:"transit",time:"11:30"},{n:"Hotel Castillo De Javier Pamplona 宿",t:"hotel",time:"夜"}],
+    wp:["Bilbao Spain","San Sebastián Spain","Pamplona Spain"], mode:"transit"},
+  { id:20, date:"6月19日(金)", loc:"パンプローナ → サラゴサ → アルカラ", emoji:"🚂",
+    stops:[{n:"Pamplona → Zaragoza (Alvia)",t:"transit",time:"09:03"},{n:"アルハフェリア宮殿 観光",t:"stop",time:"昼間"},{n:"サルバドール大聖堂 観光",t:"stop",time:""},{n:"Zaragoza → Madrid Atocha (AVE)",t:"transit",time:"14:28"},{n:"Atocha → Alcalá de Henares (C7)",t:"transit",time:"16:36"},{n:"Casa Vecinodecerbantes Alcalá 宿",t:"hotel",time:"夜"}],
+    wp:["Pamplona Spain","Palacio de la Aljaferia Zaragoza Spain","Zaragoza Spain","Madrid Atocha Spain","Alcalá de Henares Spain"], mode:"transit"},
+  { id:21, date:"6月20日(土)", loc:"アルカラ → マドリード → セビリャ → ファロ", emoji:"✈️🎉",
+    stops:[{n:"Alcalá → Madrid Atocha (C4)",t:"transit",time:"11:48"},{n:"Atocha → Sevilla Santa Justa (Iryo)",t:"transit",time:"12:40"},{n:"Sevilla → Faro Aeropuerto (Alsa)",t:"transit",time:"15:30"},{n:"ファロ 到着！🎉",t:"hotel",time:"16:45"}],
+    wp:["Alcalá de Henares Spain","Madrid Spain","Seville Spain","Faro Portugal"], mode:"transit"},
+];
+
+function gmUrl(day) {
+  if (!day.wp || !day.wp.length) return '#';
+  if (day.wp.length === 1) return 'https://maps.google.com/maps?q=' + enc(day.wp[0]);
+  var o = enc(day.wp[0]);
+  var d = enc(day.wp[day.wp.length-1]);
+  var w = day.wp.slice(1,-1).map(enc).join('|');
+  var base = 'https://www.google.com/maps/dir/?api=1&origin=' + o + '&destination=' + d;
+  if (w) base += '&waypoints=' + w;
+  if (day.mode === 'driving' || day.mode === 'walking') base += '&travelmode=' + day.mode;
+  return base;
+}
+
+// 2地点間のルートURL（区間ナビ用）
+function gmSegUrl(from, to, mode) {
+  if (!from || !to) return '#';
+  var base = 'https://www.google.com/maps/dir/?api=1';
+  base += '&origin=' + enc(from);
+  base += '&destination=' + enc(to);
+  // transitはwaypoints不要なので安全に付与できる
+  base += '&travelmode=' + (mode || 'transit');
+  return base;
+}
+
+function enc(s){ return encodeURIComponent(s); }
+
+function renderDays() {
+  var container = document.getElementById('day-list');
+  if (!container) return;
+
+  days.forEach(function(day) {
+    var url = gmUrl(day);
+
+    // スポットと区間ナビボタンを交互に生成
+    var stopsHtml = '';
+    for (var i = 0; i < day.stops.length; i++) {
+      var s = day.stops[i];
+      stopsHtml +=
+        '<div class="stop-item">' +
+          '<div class="sdot ' + (s.t || '') + '"></div>' +
+          '<div class="sname">' + s.n + '</div>' +
+          (s.time ? '<div class="stime">' + s.time + '</div>' : '') +
+        '</div>';
+
+      // 次のスポットへの区間ナビボタン（wp が両方存在する場合のみ）
+      if (i < day.stops.length - 1 && day.wp[i] && day.wp[i + 1]) {
+        var segUrl = gmSegUrl(day.wp[i], day.wp[i + 1], day.mode);
+        // 地名を短く表示（長すぎる場合は切り詰め）
+        var fromShort = day.wp[i].split(',')[0];
+        var toShort   = day.wp[i + 1].split(',')[0];
+        stopsHtml +=
+          '<div class="seg-link-wrap">' +
+            '<a class="seg-link" href="' + segUrl + '" target="_blank">' +
+              '<span class="seg-arrow">▼</span>' +
+              fromShort + ' → ' + toShort +
+            '</a>' +
+          '</div>';
+      }
+    }
+
+    var card = document.createElement('div');
+    card.className = 'day-card';
+    card.id = 'c' + day.id;
+    card.innerHTML =
+      '<div class="day-header" onclick="toggle(' + day.id + ')">' +
+        '<div class="day-num">' + day.id + '</div>' +
+        '<div class="day-meta">' +
+          '<div class="day-date">' + day.date + ' ' + day.emoji + '</div>' +
+          '<div class="day-location">' + day.loc + '</div>' +
+        '</div>' +
+        '<div class="chevron">▼</div>' +
+      '</div>' +
+      '<div class="day-body">' +
+        stopsHtml +
+        '<div class="action-row">' +
+          '<a class="abtn abtn-maps" href="' + url + '" target="_blank">📍 1日の全行程をマップで確認</a>' +
+        '</div>' +
+      '</div>';
+    container.appendChild(card);
+  });
+}
+
+function toggle(id) {
+  var card = document.getElementById('c' + id);
+  if (!card) return;
+  var wasActive = card.classList.contains('active');
+  document.querySelectorAll('.day-card.active').forEach(function(c) {
+    c.classList.remove('active');
+  });
+  if (!wasActive) {
+    card.classList.add('active');
+    setTimeout(function() {
+      card.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 60);
+  }
+}
+
+var ovWp = ["Tokyo Japan","Geneva Switzerland","Martigny Switzerland","Zermatt Switzerland","Courmayeur Italy","Chamonix France","Manchester UK","Keswick UK","Penzance UK","Exeter UK","Plymouth UK","Santander Spain","Bilbao Spain","Pamplona Spain","Zaragoza Spain","Madrid Spain","Faro Portugal"];
+var ovLabels = ["東京","ジュネーブ","マルティニー","ツェルマット","クールマイユール","シャモニー","マンチェスター","ケズィック","ペンザンス","エクセター","プリマス","サンタンデール","ビルバオ","パンプローナ","サラゴサ","マドリード","ファロ🎉"];
+
+function openModal() {
+  var chipsEl = document.getElementById('chips');
+  if (chipsEl) {
+    chipsEl.innerHTML = ovLabels.map(function(l, i) {
+      return '<div class="chip' + (i === ovLabels.length - 1 ? ' hi' : '') + '">' + l + '</div>';
+    }).join('');
+  }
+  var o = enc(ovWp[0]);
+  var d = enc(ovWp[ovWp.length-1]);
+  var w = ovWp.slice(1,-1).map(enc).join('|');
+  var btn = document.getElementById('gmap-btn');
+  if (btn) btn.href = 'https://www.google.com/maps/dir/?api=1&origin=' + o + '&destination=' + d + '&waypoints=' + w + '&travelmode=transit';
+  var overlay = document.getElementById('overlay');
+  if (overlay) overlay.classList.add('open');
+}
+
+function closeModal() {
+  var overlay = document.getElementById('overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function bgClose(e) {
+  var overlay = document.getElementById('overlay');
+  if (e.target === overlay) closeModal();
+}
+
+// DOMが確実に準備できてから実行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderDays);
+} else {
+  renderDays();
+}
+</script>
+</body>
+</html>
