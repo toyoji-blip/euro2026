@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>旅行出費記録</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b3a30">
+<meta name="apple-mobile-web-app-title" content="出費記録">
+<style>
+:root {
+  --bg:      #f5f2ea;
+  --hdr:     #3b3a30;
+  --nav-bg:  #e0d8c8;
+  --border:  #c8bda8;
+  --input-bg:#fffdf7;
+  --accent:  #5a7a5a;
+  --accent2: #8B3A2A;
+  --warn:    #B85C00;
+  --muted:   #888;
+  --card:    #fff;
+  --ink:     #333;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--ink);
+  font-size: 14px; padding-bottom: 40px;
+}
+
+/* HEADER */
+header {
+  background: var(--hdr); color: #f5f2ea;
+  padding: 44px 14px 10px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+header h1 { font-size: 17px; }
+.rate-status { font-size: 11px; opacity: .7; }
+
+/* NAV */
+nav {
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  background: var(--nav-bg); border-bottom: 1px solid var(--border);
+  position: sticky; top: 76px; z-index: 190;
+  padding: 6px 10px; gap: 6px;
+}
+nav::-webkit-scrollbar { display: none; }
+nav button {
+  flex: none; padding: 7px 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--input-bg);
+  cursor: pointer; font-size: 13px; white-space: nowrap;
+  font-family: inherit;
+}
+nav button.active { background: var(--hdr); color: #f5f2ea; border-color: var(--hdr); }
+
+/* SECTION */
+.section { display: none; padding: 14px; }
+.section.active { display: block; }
+
+/* CARD */
+.card {
+  background: var(--card); border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  margin-bottom: 12px; overflow: hidden;
+}
+.card-hdr {
+  background: var(--hdr); color: #f5f2ea;
+  padding: 8px 12px; font-size: 13px; font-weight: 700;
+}
+.card-body { padding: 12px; }
+
+/* FORM */
+label { display: block; font-size: 12px; color: var(--muted); margin-top: 10px; margin-bottom: 3px; }
+label:first-child { margin-top: 0; }
+input[type=text], input[type=number], select, textarea {
+  width: 100%; padding: 9px 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 15px; font-family: inherit;
+  background: var(--input-bg); color: var(--ink);
+  outline: none;
+}
+input:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 52px; font-size: 13px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 10px 16px; border-radius: 8px;
+  font-size: 14px; font-weight: 700; font-family: inherit;
+  border: none; cursor: pointer; transition: opacity .15s;
+}
+.btn:active { opacity: .7; }
+.btn-primary { background: var(--hdr); color: #f5f2ea; }
+.btn-accent  { background: var(--accent); color: white; }
+.btn-warn    { background: var(--accent2); color: white; }
+.btn-gray    { background: #e0d8c8; color: var(--ink); }
+.btn-danger  { background: #dc2626; color: white; }
+.btn-full    { width: 100%; margin-top: 10px; }
+.btn-sm      { padding: 5px 10px; font-size: 12px; font-weight: 600; }
+
+/* CURRENCY PILLS */
+.currency-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.c-pill {
+  padding: 8px 14px; border-radius: 20px;
+  font-size: 14px; font-weight: 700; font-family: inherit;
+  border: 2px solid var(--border); background: var(--input-bg);
+  cursor: pointer; transition: all .15s;
+}
+.c-pill.selected { background: var(--hdr); color: white; border-color: var(--hdr); }
+
+/* CATEGORY PILLS */
+.cat-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.cat-pill {
+  padding: 7px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  border: 2px solid var(--border); background: var(--input-bg);
+  cursor: pointer; transition: all .15s;
+}
+.cat-pill.selected { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* PAYMENT PILLS */
+.pay-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.pay-pill {
+  padding: 7px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  border: 2px solid var(--border); background: var(--input-bg);
+  cursor: pointer; transition: all .15s;
+}
+.pay-pill.selected { background: var(--accent2); color: white; border-color: var(--accent2); }
+
+/* SUMMARY */
+.summary-total {
+  text-align: center; padding: 16px;
+  background: var(--hdr); color: white;
+  border-radius: 10px; margin-bottom: 12px;
+}
+.summary-total .label { font-size: 12px; opacity: .75; }
+.summary-total .amount { font-size: 28px; font-weight: 700; margin-top: 4px; }
+
+.currency-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid #f0ebe0;
+}
+.currency-row:last-child { border-bottom: none; }
+.currency-row .cur-code { font-weight: 700; font-size: 15px; }
+.currency-row .cur-amt  { font-size: 15px; }
+.currency-row .cur-jpy  { font-size: 12px; color: var(--muted); }
+
+/* EXPENSE LIST */
+.expense-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid #f0ebe0;
+}
+.expense-item:last-child { border-bottom: none; }
+.exp-cat {
+  background: var(--accent); color: white;
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.exp-info { flex: 1; }
+.exp-amount { font-weight: 700; font-size: 15px; text-align: right; }
+.exp-jpy    { font-size: 11px; color: var(--muted); text-align: right; }
+.exp-meta   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* FX LIST */
+.fx-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; border-bottom: 1px solid #f0ebe0;
+}
+.fx-item:last-child { border-bottom: none; }
+.fx-badge {
+  background: #dbeafe; color: #1e40af;
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.fx-info { flex: 1; font-size: 13px; }
+.fx-meta { font-size: 11px; color: var(--muted); }
+
+/* RATE GRID */
+.rate-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rate-item {
+  background: var(--input-bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rate-code { font-weight: 700; }
+.rate-val  { font-size: 13px; color: var(--muted); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--hdr); color: white;
+  padding: 8px 18px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  opacity: 0; transition: opacity .3s;
+  z-index: 9999; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 13px; }
+
+/* SETTINGS LIST */
+.setting-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid #f0ebe0;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { flex: 1; font-size: 13px; }
+.card-tag { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.card-tag-item {
+  background: #e0d8c8; border-radius: 4px;
+  padding: 4px 8px; font-size: 12px;
+  display: flex; align-items: center; gap: 4px;
+}
+.card-tag-item button { background: none; border: none; cursor: pointer; font-size: 12px; color: #dc2626; padding: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✈ 旅行出費記録</h1>
+  <span class="rate-status" id="rateStatus">レート取得中...</span>
+</header>
+
+<nav>
+  <button class="active" data-target="sec-expense">💴 支出入力</button>
+  <button data-target="sec-fx">💱 両替/出金</button>
+  <button data-target="sec-summary">📊 累計</button>
+  <button data-target="sec-list">📋 一覧</button>
+  <button data-target="sec-settings">⚙ 設定</button>
+</nav>
+
+<!-- ========== 支出入力 ========== -->
+<div class="section active" id="sec-expense">
+  <div class="card">
+    <div class="card-hdr">💴 支出を記録</div>
+    <div class="card-body">
+      <label>金額</label>
+      <input type="number" id="exp-amount" placeholder="0.00" step="0.01" inputmode="decimal">
+
+      <label>通貨</label>
+      <div class="currency-pills" id="exp-currency-pills"></div>
+
+      <label>カテゴリ</label>
+      <div class="cat-pills" id="exp-cat-pills"></div>
+
+      <label>支払方法</label>
+      <div class="pay-pills" id="exp-pay-pills"></div>
+
+      <div class="row2">
+        <div>
+          <label>国</label>
+          <input type="text" id="exp-country" placeholder="例：スイス">
+        </div>
+        <div>
+          <label>都市</label>
+          <input type="text" id="exp-city" placeholder="例：ジュネーブ">
+        </div>
+      </div>
+
+      <label>メモ</label>
+      <textarea id="exp-memo" placeholder="任意"></textarea>
+
+      <button class="btn btn-accent btn-full" onclick="addExpense()">✚ 記録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 両替/出金 ========== -->
+<div class="section" id="sec-fx">
+  <div class="card">
+    <div class="card-hdr">💱 両替・出金を記録</div>
+    <div class="card-body">
+      <label>出金元</label>
+      <div class="pay-pills" id="fx-source-pills">
+        <button class="pay-pill" data-val="日本銀行" onclick="selectFxSource(this)">🏦 日本銀行</button>
+        <button class="pay-pill" data-val="米国銀行" onclick="selectFxSource(this)">🏦 米国銀行</button>
+        <button class="pay-pill" data-val="クレジットカード" onclick="selectFxSource(this)">💳 クレカ</button>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>出金通貨</label>
+          <select id="fx-from-cur"></select>
+        </div>
+        <div>
+          <label>出金額</label>
+          <input type="number" id="fx-from-amt" placeholder="0" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>受取通貨</label>
+          <select id="fx-to-cur"></select>
+        </div>
+        <div>
+          <label>受取額</label>
+          <input type="number" id="fx-to-amt" placeholder="0" inputmode="decimal">
+        </div>
+      </div>
+
+      <label>メモ</label>
+      <textarea id="fx-memo" placeholder="ATM手数料など"></textarea>
+
+      <button class="btn btn-primary btn-full" onclick="addFx()">✚ 記録する</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">💱 両替・出金履歴</div>
+    <div class="card-body" style="padding:0 12px" id="fxList"></div>
+  </div>
+</div>
+
+<!-- ========== 累計 ========== -->
+<div class="section" id="sec-summary">
+  <div class="summary-total">
+    <div class="label">JPY換算 総支出</div>
+    <div class="amount" id="totalJPY">¥ 0</div>
+    <div style="font-size:11px;opacity:.6;margin-top:4px" id="rateNote"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">通貨別合計</div>
+    <div class="card-body" style="padding:0 12px" id="currencySummary"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">カテゴリ別合計（JPY換算）</div>
+    <div class="card-body" style="padding:0 12px" id="catSummary"></div>
+  </div>
+</div>
+
+<!-- ========== 一覧 ========== -->
+<div class="section" id="sec-list">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:13px;color:var(--muted)" id="listCount"></span>
+    <button class="btn btn-gray btn-sm" onclick="exportCSV()">📥 CSVエクスポート</button>
+  </div>
+  <div class="card">
+    <div class="card-body" style="padding:0 12px" id="expenseList"></div>
+  </div>
+</div>
+
+<!-- ========== 設定 ========== -->
+<div class="section" id="sec-settings">
+  <div class="card">
+    <div class="card-hdr">💳 カード設定</div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px">支払方法に表示するカード名を登録</p>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="newCard" placeholder="例：SMBC Visa" style="flex:1">
+        <button class="btn btn-accent btn-sm" onclick="addCard()">追加</button>
+      </div>
+      <div class="card-tag" id="cardTagList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">💹 為替レート（対JPY）</div>
+    <div class="card-body">
+      <div class="rate-grid" id="rateGrid"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="fetchRates()">🔄 レートを更新</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">💾 データ管理</div>
+    <div class="card-body">
+      <div class="setting-row">
+        <span class="setting-label">JSONエクスポート</span>
+        <button class="btn btn-accent btn-sm" onclick="exportJSON()">書出し</button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">JSONインポート</span>
+        <button class="btn btn-gray btn-sm" onclick="document.getElementById('importFile').click()">読込み</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">全データ消去</span>
+        <button class="btn btn-danger btn-sm" onclick="resetAll()">リセット</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 定数 =====
+const CURRENCIES = ['JPY','CHF','EUR','GBP','USD','CNY'];
+const CATEGORIES = ['食事','交通','宿泊','観光','買物','その他'];
+const DEFAULT_CARDS = ['Cash'];
+
+// ===== STATE =====
+let state = {
+  expenses: [],   // {id, ts, amount, currency, category, payment, country, city, memo}
+  fxRecords: [],  // {id, ts, source, fromCur, fromAmt, toCur, toAmt, memo}
+  rates: {},      // {CHF:165, EUR:160, ...} JPY基準
+  rateUpdated: null,
+  cards: [...DEFAULT_CARDS],
+};
+
+// ===== 選択状態 =====
+let selCurrency = 'EUR';
+let selCategory = '食事';
+let selPayment  = 'Cash';
+let selFxSource = '日本銀行';
+
+// ===== INIT =====
+function init() {
+  const saved = localStorage.getItem('travel-expense');
+  if (saved) { try { state = JSON.parse(saved); } catch(e) {} }
+  // rates がなければデフォルト
+  if (!state.rates || Object.keys(state.rates).length === 0) {
+    state.rates = {CHF:165, EUR:162, GBP:195, USD:150, CNY:21};
+  }
+  if (!state.cards || state.cards.length === 0) state.cards = [...DEFAULT_CARDS];
+
+  renderCurrencyPills();
+  renderCatPills();
+  renderPayPills();
+  renderFxCurrencySelects();
+  renderCards();
+  renderRateGrid();
+  renderSummary();
+  renderList();
+  renderFxList();
+
+  // レート自動取得
+  fetchRates();
+
+  // ナビ
+  document.querySelectorAll('nav button[data-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(btn.dataset.target).classList.add('active');
+      if (btn.dataset.target === 'sec-summary') renderSummary();
+      if (btn.dataset.target === 'sec-list') renderList();
+    });
+  });
+}
+
+function save() { localStorage.setItem('travel-expense', JSON.stringify(state)); }
+
+// ===== RATES =====
+async function fetchRates() {
+  document.getElementById('rateStatus').textContent = 'レート取得中...';
+  try {
+    // Open Exchange Rates (無料・無認証エンドポイント経由)
+    const r = await fetch('https://open.er-api.com/v6/latest/JPY');
+    const data = await r.json();
+    if (data && data.rates) {
+      // JPY基準の逆数で各通貨→JPYレートを計算
+      ['CHF','EUR','GBP','USD','CNY'].forEach(cur => {
+        if (data.rates[cur]) {
+          state.rates[cur] = Math.round((1 / data.rates[cur]) * 100) / 100;
+        }
+      });
+      state.rateUpdated = new Date().toISOString();
+      save();
+      renderRateGrid();
+      const t = new Date(state.rateUpdated);
+      document.getElementById('rateStatus').textContent =
+        `レート更新済 ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+      showToast('為替レートを更新しました');
+    }
+  } catch(e) {
+    document.getElementById('rateStatus').textContent = 'オフライン（前回レート使用）';
+  }
+}
+
+function toJPY(amount, currency) {
+  if (currency === 'JPY') return amount;
+  return amount * (state.rates[currency] || 1);
+}
+
+// ===== CURRENCY PILLS =====
+function renderCurrencyPills() {
+  const el = document.getElementById('exp-currency-pills');
+  el.innerHTML = CURRENCIES.filter(c => c !== 'JPY').concat(['JPY']).map(c =>
+    `<button class="c-pill ${c===selCurrency?'selected':''}" onclick="pickCurrency('${c}')">${c}</button>`
+  ).join('');
+}
+function pickCurrency(c) { selCurrency = c; renderCurrencyPills(); }
+
+// ===== CAT PILLS =====
+function renderCatPills() {
+  const el = document.getElementById('exp-cat-pills');
+  el.innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-pill ${c===selCategory?'selected':''}" onclick="pickCat('${c}')">${c}</button>`
+  ).join('');
+}
+function pickCat(c) { selCategory = c; renderCatPills(); }
+
+// ===== PAY PILLS =====
+function renderPayPills() {
+  const el = document.getElementById('exp-pay-pills');
+  el.innerHTML = state.cards.map(c =>
+    `<button class="pay-pill ${c===selPayment?'selected':''}" onclick="pickPay('${c}')">${c}</button>`
+  ).join('');
+}
+function pickPay(c) { selPayment = c; renderPayPills(); }
+
+// ===== FX SOURCE =====
+function selectFxSource(btn) {
+  document.querySelectorAll('#fx-source-pills .pay-pill').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selFxSource = btn.dataset.val;
+}
+
+// ===== FX CURRENCY SELECTS =====
+function renderFxCurrencySelects() {
+  const opts = CURRENCIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('fx-from-cur').innerHTML = opts;
+  document.getElementById('fx-to-cur').innerHTML = opts;
+  document.getElementById('fx-from-cur').value = 'JPY';
+  document.getElementById('fx-to-cur').value = 'EUR';
+}
+
+// ===== ADD EXPENSE =====
+function addExpense() {
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  if (!amount || amount <= 0) { showToast('金額を入力してください'); return; }
+
+  const exp = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    ts: new Date().toISOString(),
+    amount,
+    currency: selCurrency,
+    category: selCategory,
+    payment: selPayment,
+    country: document.getElementById('exp-country').value.trim(),
+    city: document.getElementById('exp-city').value.trim(),
+    memo: document.getElementById('exp-memo').value.trim(),
+  };
+
+  state.expenses.push(exp);
+  save();
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-memo').value = '';
+  showToast(`${selCurrency} ${amount.toLocaleString()} を記録しました`);
+  renderSummary();
+  renderList();
+}
+
+// ===== ADD FX =====
+function addFx() {
+  const fromAmt = parseFloat(document.getElementById('fx-from-amt').value);
+  const toAmt   = parseFloat(document.getElementById('fx-to-amt').value);
+  const fromCur = document.getElementById('fx-from-cur').value;
+  const toCur   = document.getElementById('fx-to-cur').value;
+  if (!fromAmt || !toAmt) { showToast('金額を入力してください'); return; }
+
+  const fx = {
+    id: Date.now() + '_fx',
+    ts: new Date().toISOString(),
+    source: selFxSource,
+    fromCur, fromAmt, toCur, toAmt,
+    memo: document.getElementById('fx-memo').value.trim(),
+  };
+  state.fxRecords.push(fx);
+  save();
+  document.getElementById('fx-from-amt').value = '';
+  document.getElementById('fx-to-amt').value = '';
+  document.getElementById('fx-memo').value = '';
+  showToast('両替/出金を記録しました');
+  renderFxList();
+}
+
+// ===== RENDER SUMMARY =====
+function renderSummary() {
+  // 通貨別合計
+  const byCode = {};
+  state.expenses.forEach(e => {
+    byCode[e.currency] = (byCode[e.currency] || 0) + e.amount;
+  });
+
+  // JPY総計
+  let totalJPY = 0;
+  Object.entries(byCode).forEach(([cur, amt]) => { totalJPY += toJPY(amt, cur); });
+
+  document.getElementById('totalJPY').textContent = '¥ ' + Math.round(totalJPY).toLocaleString();
+
+  if (state.rateUpdated) {
+    const t = new Date(state.rateUpdated);
+    document.getElementById('rateNote').textContent =
+      `レート更新: ${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+  }
+
+  // 通貨別
+  const curEl = document.getElementById('currencySummary');
+  if (Object.keys(byCode).length === 0) {
+    curEl.innerHTML = '<div class="empty">記録がありません</div>';
+  } else {
+    curEl.innerHTML = Object.entries(byCode).map(([cur, amt]) => `
+      <div class="currency-row">
+        <span class="cur-code">${cur}</span>
+        <span>
+          <span class="cur-amt">${cur === 'JPY' ? '' : cur+' '}${amt.toLocaleString(undefined,{maximumFractionDigits:2})}</span><br>
+          <span class="cur-jpy">≈ ¥${Math.round(toJPY(amt,cur)).toLocaleString()}</span>
+        </span>
+      </div>
+    `).join('');
+  }
+
+  // カテゴリ別
+  const byCat = {};
+  state.expenses.forEach(e => {
+    byCat[e.category] = (byCat[e.category] || 0) + toJPY(e.amount, e.currency);
+  });
+  const catEl = document.getElementById('catSummary');
+  if (Object.keys(byCat).length === 0) {
+    catEl.innerHTML = '<div class="empty">記録がありません</div>';
+  } else {
+    const sorted = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+    catEl.innerHTML = sorted.map(([cat, jpy]) => `
+      <div class="currency-row">
+        <span class="cur-code">${cat}</span>
+        <span class="cur-amt">¥${Math.round(jpy).toLocaleString()}</span>
+      </div>
+    `).join('');
+  }
+}
+
+// ===== RENDER LIST =====
+function renderList() {
+  const el = document.getElementById('expenseList');
+  document.getElementById('listCount').textContent = `${state.expenses.length}件`;
+
+  if (state.expenses.length === 0) {
+    el.innerHTML = '<div class="empty">記録がありません</div>';
+    return;
+  }
+
+  const sorted = [...state.expenses].reverse();
+  el.innerHTML = sorted.map(e => {
+    const d = new Date(e.ts);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const jpy = Math.round(toJPY(e.amount, e.currency));
+    const loc = [e.country, e.city].filter(Boolean).join(' ');
+    return `
+      <div class="expense-item">
+        <div>
+          <span class="exp-cat">${e.category}</span>
+          <div class="exp-meta">${dateStr}${loc?' · '+loc:''} · ${e.payment}</div>
+          ${e.memo ? `<div class="exp-meta">${e.memo}</div>` : ''}
+        </div>
+        <div style="text-align:right;min-width:80px">
+          <div class="exp-amount">${e.currency} ${e.amount.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+          ${e.currency!=='JPY'?`<div class="exp-jpy">¥${jpy.toLocaleString()}</div>`:''}
+          <button class="btn btn-danger btn-sm" style="margin-top:4px" onclick="deleteExpense('${e.id}')">削除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== DELETE EXPENSE =====
+function deleteExpense(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  save();
+  renderList();
+  renderSummary();
+  showToast('削除しました');
+}
+
+// ===== RENDER FX LIST =====
+function renderFxList() {
+  const el = document.getElementById('fxList');
+  if (state.fxRecords.length === 0) {
+    el.innerHTML = '<div class="empty">記録がありません</div>';
+    return;
+  }
+  el.innerHTML = [...state.fxRecords].reverse().map(f => {
+    const d = new Date(f.ts);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `
+      <div class="fx-item">
+        <span class="fx-badge">${f.source}</span>
+        <div class="fx-info">
+          ${f.fromCur} ${f.fromAmt.toLocaleString()} → ${f.toCur} ${f.toAmt.toLocaleString()}
+          <div class="fx-meta">${dateStr}${f.memo?' · '+f.memo:''}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteFx('${f.id}')">削除</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteFx(id) {
+  if (!confirm('削除しますか？')) return;
+  state.fxRecords = state.fxRecords.filter(f => f.id !== id);
+  save();
+  renderFxList();
+  showToast('削除しました');
+}
+
+// ===== CARDS =====
+function addCard() {
+  const val = document.getElementById('newCard').value.trim();
+  if (!val) return;
+  if (state.cards.includes(val)) { showToast('すでに登録済みです'); return; }
+  state.cards.push(val);
+  save();
+  document.getElementById('newCard').value = '';
+  renderCards();
+  renderPayPills();
+  showToast(`${val} を追加しました`);
+}
+
+function deleteCard(name) {
+  if (name === 'Cash') { showToast('Cashは削除できません'); return; }
+  state.cards = state.cards.filter(c => c !== name);
+  if (selPayment === name) selPayment = 'Cash';
+  save();
+  renderCards();
+  renderPayPills();
+}
+
+function renderCards() {
+  const el = document.getElementById('cardTagList');
+  el.innerHTML = state.cards.map(c => `
+    <span class="card-tag-item">
+      ${c}
+      <button onclick="deleteCard('${c}')" title="削除">✕</button>
+    </span>
+  `).join('');
+}
+
+// ===== RATE GRID =====
+function renderRateGrid() {
+  const el = document.getElementById('rateGrid');
+  el.innerHTML = Object.entries(state.rates).map(([cur, rate]) => `
+    <div class="rate-item">
+      <span class="rate-code">${cur}</span>
+      <span class="rate-val">1${cur} = ¥${rate}</span>
+    </div>
+  `).join('');
+}
+
+// ===== EXPORT =====
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `travel_expense_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      state = obj;
+      save();
+      init();
+      showToast('インポートしました');
+    } catch { showToast('読込エラー'); }
+  };
+  reader.readAsText(file);
+}
+
+function exportCSV() {
+  const rows = [['日時','金額','通貨','JPY換算','カテゴリ','支払方法','国','都市','メモ']];
+  state.expenses.forEach(e => {
+    rows.push([
+      new Date(e.ts).toLocaleString('ja'),
+      e.amount, e.currency,
+      Math.round(toJPY(e.amount, e.currency)),
+      e.category, e.payment, e.country, e.city, e.memo
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `travel_expense_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSVをエクスポートしました');
+}
+
+function resetAll() {
+  if (!confirm('全データを消去しますか？')) return;
+  state = {
+    expenses:[], fxRecords:[],
+    rates:{CHF:165, EUR:162, GBP:195, USD:150, CNY:21},
+    rateUpdated: null, cards:[...DEFAULT_CARDS]
+  };
+  save(); init();
+  showToast('リセットしました');
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ===== SERVICE WORKER 登録 =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Euro2026/sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW failed:', e));
+  });
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
