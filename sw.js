@@ -1,6 +1,7 @@
 const CACHE_NAME = 'travel-expense-v1';
 const ASSETS = [
   '/Euro2026/travel-expense.html',
+  '/Euro2026/index.html',
 ];
 
 // インストール時にキャッシュ
