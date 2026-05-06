@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>旅行行程 2026</title>
+<link rel="manifest" href="manifest-itinerary.json">
+<meta name="theme-color" content="#1a1610">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="行程表">
 <style>
 /* Google Fontsが読み込めない場合のフォールバック付き */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
@@ -519,6 +524,11 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', renderDays);
 } else {
   renderDays();
+}
+  if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Euro2026/sw.js');
+  });
 }
 </script>
 </body>
