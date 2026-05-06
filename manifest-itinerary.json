@@ -1,0 +1,9 @@
+{
+  "name": "旅行行程 2026",
+  "short_name": "行程表",
+  "start_url": "/Euro2026/index.html",
+  "scope": "/Euro2026/",
+  "display": "standalone",
+  "background_color": "#1a1610",
+  "theme_color": "#1a1610"
+}
