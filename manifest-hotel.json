@@ -1,0 +1,18 @@
+{
+  "name": "宿泊先管理",
+  "short_name": "宿泊管理",
+  "description": "ヨーロッパ旅行2026の宿泊先管理アプリ",
+  "start_url": "/Euro2026/hotel_manager_euro2026.html",
+  "scope": "/Euro2026/",
+  "display": "standalone",
+  "background_color": "#1a1814",
+  "theme_color": "#13110d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%231a1814'/><text y='140' x='20' font-size='140'>🏨</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

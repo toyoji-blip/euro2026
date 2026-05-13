@@ -1,7 +1,8 @@
-const CACHE_NAME = 'travel-expense-v1';
+const CACHE_NAME = 'travel-expense-v2';  // バージョンを上げて古いキャッシュを破棄
 const ASSETS = [
   '/Euro2026/travel-expense.html',
   '/Euro2026/index.html',
+  '/Euro2026/hotel_manager_euro2026.html',  // 宿泊先管理アプリを追加
 ];
 
 // インストール時にキャッシュ
@@ -27,7 +28,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // 為替レートAPIはキャッシュしない
   if (event.request.url.includes('open.er-api.com')) return;
-
   event.respondWith(
     fetch(event.request)
       .then(response => {

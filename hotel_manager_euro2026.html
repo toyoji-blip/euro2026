@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🏨 宿泊先管理 · ヨーロッパ旅行2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link rel="manifest" href="/Euro2026/manifest-hotel.json">
+<meta name="theme-color" content="#13110d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="宿泊管理">
+<style>
+:root {
+  --bg:    #1a1814;
+  --bg2:   #201d18;
+  --bg3:   #2a2620;
+  --card:  #232019;
+  --cb:    #3d3728;
+  --gold:  #c9a84c;
+  --gd:    #8a6e2e;
+  --gbg:   rgba(201,168,76,.13);
+  --text:  #f0ead8;
+  --t2:    #c8b890;
+  --t3:    #8a7a5e;
+  --green: #4caf80;  --gnbg: rgba(76,175,128,.14);
+  --red:   #e05c5c;  --rdbg: rgba(224,92,92,.14);
+  --ylw:   #d4a23a;  --ylbg: rgba(212,162,58,.14);
+  --grybg: rgba(160,144,112,.12);
+  --r: 11px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 60px; }
+
+/* Header */
+.hdr { background: #13110d; border-bottom: 1px solid var(--cb); padding: 13px 16px 11px; position: sticky; top: 0; z-index: 100; }
+.hdr-row { display: flex; align-items: center; justify-content: space-between; }
+.hdr-title { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: .03em; }
+.hdr-sub { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.hdr-btns { display: flex; gap: 7px; }
+.hbtn { background: none; border: 1px solid var(--cb); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--t3); flex-shrink: 0; }
+.hbtn i { font-size: 18px; }
+.hbtn:active { background: var(--bg3); }
+.hbtn.primary { background: var(--gold); border-color: var(--gold); color: #13110d; }
+.hbtn.primary:active { opacity: .85; }
+
+/* IO bar */
+.io-bar { display: none; gap: 8px; padding: 8px 14px; background: var(--bg2); border-bottom: 1px solid var(--cb); }
+.io-bar.open { display: flex; }
+.io-btn { flex: 1; background: var(--bg3); border: 1px solid var(--cb); border-radius: 9px; padding: 9px 10px; color: var(--t2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.io-btn i { font-size: 16px; }
+.io-btn:active { background: var(--gbg); border-color: var(--gd); color: var(--gold); }
+
+/* Filter bar */
+.fbar { display: flex; gap: 6px; padding: 9px 14px 8px; overflow-x: auto; background: var(--bg2); border-bottom: 1px solid var(--cb); scrollbar-width: none; }
+.fbar::-webkit-scrollbar { display: none; }
+.chip { flex-shrink: 0; background: var(--bg3); border: 1px solid var(--cb); color: var(--t3); font-size: 12px; border-radius: 20px; padding: 5px 13px; cursor: pointer; white-space: nowrap; }
+.chip.on { background: var(--gbg); border-color: var(--gd); color: var(--gold); }
+
+/* Summary bar */
+.sumbar { display: flex; gap: 8px; padding: 10px 14px; background: var(--bg2); }
+.spill { flex: 1; background: var(--bg3); border: 1px solid var(--cb); border-radius: 9px; padding: 7px 10px; text-align: center; }
+.spill .val { font-size: 19px; font-weight: 700; color: var(--gold); }
+.spill .lbl { font-size: 10px; color: var(--t3); margin-top: 1px; }
+
+/* List */
+.list { padding: 10px 13px; display: flex; flex-direction: column; gap: 10px; }
+.sec-lbl { font-size: 11px; color: var(--t2); letter-spacing: .07em; text-transform: uppercase; padding: 5px 1px 2px; font-weight: 600; }
+
+/* Hotel card */
+.hcard { background: var(--card); border: 1px solid var(--cb); border-radius: var(--r); overflow: hidden; }
+.card-top { display: flex; align-items: flex-start; gap: 10px; padding: 12px 13px 10px; }
+.sdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.card-info { flex: 1; min-width: 0; }
+.card-where { font-size: 12px; color: var(--t2); margin-bottom: 2px; font-weight: 600; }
+.card-name { font-family: Georgia, serif; font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-addr { font-size: 11px; color: var(--t3); margin-top: 3px; line-height: 1.45; }
+.card-phone { font-size: 11px; color: var(--t3); margin-top: 2px; }
+.card-note { font-size: 11px; color: var(--t3); margin-top: 2px; font-style: italic; }
+.card-acts { display: flex; gap: 5px; align-items: flex-start; flex-shrink: 0; }
+.ibtn { background: none; border: 1px solid var(--cb); border-radius: 7px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--t3); }
+.ibtn i { font-size: 14px; }
+.ibtn:active { background: var(--bg3); }
+.ibtn.del:active { border-color: var(--red); color: var(--red); }
+
+/* Card footer */
+.card-ft { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 7px 13px 10px; border-top: 1px solid var(--cb); }
+.badge { font-size: 11px; border-radius: 20px; padding: 3px 10px; font-weight: 600; white-space: nowrap; }
+/* 予約済：グリーン */
+.b-rsv       { background: var(--gnbg);                color: var(--green); }
+/* 無料C 余裕あり：グリーン */
+.b-fcl       { background: var(--gnbg);                color: var(--green); }
+/* 無料C 3日以内：アンバー */
+.b-fcl-amber { background: rgba(212,162,58,.18); color: #e8b84b; border: 1px solid rgba(212,162,58,.4); }
+/* 無料C 最終日：赤 */
+.b-fcl-red   { background: var(--rdbg);                color: var(--red);   border: 1px solid rgba(224,92,92,.4); }
+/* キャンセル不可：オレンジ */
+.b-nrf       { background: rgba(210,100,40,.18);       color: #e07840;      }
+/* キャンセル済：グレー */
+.b-cnc       { background: var(--grybg);               color: var(--t3);    }
+/* 未予約：イエロー */
+.b-upd       { background: var(--ylbg);                color: var(--ylw);   }
+.ci { font-size: 11px; color: var(--t3); flex: 1; min-width: 0; }
+.ci.urg { color: var(--ylw); }
+.ci.exp { color: var(--red); }
+.ft-links { display: flex; gap: 5px; flex-shrink: 0; }
+.lbtn { background: none; border: 1px solid var(--cb); border-radius: 7px; padding: 4px 9px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.lbtn i { font-size: 12px; }
+.lbtn.gmap { color: #5dbf8a; border-color: #2a4d38; }
+.lbtn.gmap:active { background: var(--gnbg); }
+.lbtn.web { color: var(--gd); border-color: #4d3c18; }
+.lbtn.web:active { background: var(--gbg); }
+
+/* Empty */
+.empty { text-align: center; padding: 60px 20px; color: var(--t3); }
+.empty i { font-size: 44px; margin-bottom: 12px; display: block; }
+.empty p { font-size: 14px; margin-bottom: 6px; }
+.empty small { font-size: 12px; }
+
+/* Overlay */
+.ov { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.74); align-items: flex-end; justify-content: center; }
+.ov.open { display: flex; }
+
+/* Sheet */
+.sheet { background: var(--bg2); border: 1px solid var(--cb); border-radius: 16px 16px 0 0; padding: 14px 16px 36px; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; }
+.handle { width: 42px; height: 4px; background: var(--cb); border-radius: 2px; margin: 0 auto 14px; }
+.sheet-title { font-family: Georgia, serif; font-size: 17px; color: var(--gold); margin-bottom: 16px; font-weight: 700; }
+.fg { margin-bottom: 13px; }
+.fl { font-size: 12px; color: var(--t3); margin-bottom: 5px; display: block; }
+.fi, .fs { width: 100%; background: var(--bg3); border: 1px solid var(--cb); border-radius: 9px; padding: 10px 12px; color: var(--text); font-size: 15px; outline: none; -webkit-appearance: none; font-family: inherit; }
+.fi:focus, .fs:focus { border-color: var(--gd); }
+.fs option { background: var(--bg3); }
+.frow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.macts { display: flex; gap: 10px; margin-top: 20px; }
+.bcnc { flex: 1; background: var(--bg3); border: 1px solid var(--cb); color: var(--t2); border-radius: 9px; padding: 13px; font-size: 14px; cursor: pointer; }
+.bsave { flex: 2; background: var(--gold); border: none; color: #13110d; border-radius: 9px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* Confirm */
+.conf { background: var(--bg2); border: 1px solid var(--cb); border-radius: 14px; padding: 20px; width: 88%; max-width: 340px; margin: auto; }
+.conf-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.conf-msg { font-size: 13px; color: var(--t3); margin-bottom: 18px; line-height: 1.5; }
+.conf-acts { display: flex; gap: 8px; }
+.cno { flex: 1; background: var(--bg3); border: 1px solid var(--cb); color: var(--t2); border-radius: 9px; padding: 11px; font-size: 13px; cursor: pointer; }
+.cok { flex: 1; background: var(--red); border: none; color: #fff; border-radius: 9px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg3); border: 1px solid var(--cb); color: var(--t2); font-size: 13px; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 300; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hdr">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-title">🏨 宿泊先管理</div>
+        <div class="hdr-sub">ヨーロッパ旅行 2026 · 5/31〜6/20</div>
+      </div>
+      <div class="hdr-btns">
+        <button class="hbtn" onclick="toggleIO()" title="エクスポート・インポート" aria-label="データ入出力">
+          <i class="ti ti-arrows-exchange"></i>
+        </button>
+        <button class="hbtn primary" onclick="openAdd()" title="宿泊先を追加" aria-label="追加">
+          <i class="ti ti-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="io-bar" id="ioBar">
+    <button class="io-btn" onclick="exportJSON()"><i class="ti ti-download"></i>JSONエクスポート</button>
+    <button class="io-btn" onclick="document.getElementById('fileIn').click()"><i class="ti ti-upload"></i>JSONインポート</button>
+    <input type="file" id="fileIn" accept=".json" style="display:none" onchange="importJSON(event)">
+  </div>
+
+  <div class="fbar" id="fbar"></div>
+  <div class="sumbar" id="sumbar"></div>
+  <div id="listWrap"></div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="ov" id="formOv">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title" id="formTitle">宿泊先を追加</div>
+    <div class="fg">
+      <label class="fl">チェックイン日 *</label>
+      <input type="date" class="fi" id="f-date">
+    </div>
+    <div class="frow2">
+      <div class="fg">
+        <label class="fl">国</label>
+        <select class="fs" id="f-country">
+          <option value="">選択</option>
+          <option>スイス</option><option>フランス</option><option>イタリア</option>
+          <option>イギリス</option><option>スペイン</option><option>ポルトガル</option>
+          <option>ベルギー</option><option>オランダ</option><option>ドイツ</option>
+          <option>その他</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">都市</label>
+        <input type="text" class="fi" id="f-city" placeholder="例：Zermatt">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">ホテル名 *</label>
+      <input type="text" class="fi" id="f-name" placeholder="例：Hotel Mont-Blanc">
+    </div>
+    <div class="fg">
+      <label class="fl">住所（Google Mapsに使用）</label>
+      <input type="text" class="fi" id="f-address" placeholder="例：Bahnhofstrasse 5, Zermatt">
+    </div>
+    <div class="fg">
+      <label class="fl">ウェブサイト</label>
+      <input type="url" class="fi" id="f-website" placeholder="https://...">
+    </div>
+    <div class="frow2">
+      <div class="fg">
+        <label class="fl">予約番号</label>
+        <input type="text" class="fi" id="f-bookingno" placeholder="予約番号">
+      </div>
+      <div class="fg">
+        <label class="fl">電話番号</label>
+        <input type="tel" class="fi" id="f-phone" placeholder="+XX XX XXXX XXXX">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">ステータス</label>
+      <select class="fs" id="f-status" onchange="updateCDVisible()">
+        <option value="reserved">予約済</option>
+        <option value="free-cancel">無料キャンセル期限前</option>
+        <option value="nonref">無料キャンセル不可</option>
+        <option value="cancelled">キャンセル済</option>
+        <option value="unpaid">未予約</option>
+      </select>
+    </div>
+    <!-- キャンセル期限：UIは日付のみ。内部では23:59として処理 -->
+    <div id="cdGroup">
+      <div class="fg">
+        <label class="fl">無料キャンセル期限日</label>
+        <input type="date" class="fi" id="f-canceldate">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">メモ</label>
+      <input type="text" class="fi" id="f-note" placeholder="備考・キャンセルポリシーなど">
+    </div>
+    <div class="macts">
+      <button class="bcnc" onclick="closeForm()">キャンセル</button>
+      <button class="bsave" onclick="saveHotel()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete -->
+<div class="ov" id="confOv">
+  <div class="conf">
+    <div class="conf-title">削除の確認</div>
+    <div class="conf-msg" id="confMsg"></div>
+    <div class="conf-acts">
+      <button class="cno" onclick="closeConf()">キャンセル</button>
+      <button class="cok" id="confOk">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// タイムゾーン設定
+// 国名 → UTCオフセット（分）
+// 旅行期間（5/31〜6/20）は全地域とも夏時間
+// ═══════════════════════════════════════════════════════
+const TZ_OFFSET = {
+  'スイス':      120,  // CEST +02:00
+  'イタリア':    120,  // CEST +02:00
+  'フランス':    120,  // CEST +02:00
+  'スペイン':    120,  // CEST +02:00
+  'ポルトガル':   60,  // WEST +01:00
+  'イギリス':     60,  // BST  +01:00
+  'ベルギー':    120,
+  'オランダ':    120,
+  'ドイツ':      120,
+  '日本':        540,  // JST  +09:00
+  'その他':      null, // nullの場合はデバイスのローカル時刻を使用
+};
+const TZ_NAME = {
+  120: 'CEST (+02:00)',
+  60:  'BST / WEST (+01:00)',
+};
+
+// 国からUTCオフセット(分)を返す。未定義・その他はデバイスのローカルオフセットを使用
+function tzOffset(country) {
+  const v = TZ_OFFSET[country];
+  if (v !== undefined && v !== null) return v;
+  // デバイスのタイムゾーンオフセット（分）を返す（JSの仕様でマイナスが東なので符号反転）
+  return -new Date().getTimezoneOffset();
+}
+
+// キャンセル期限をDateオブジェクトで返す（現地時刻→UTC変換）
+// cancelDate: 'YYYY-MM-DD', cancelTime: 'HH:MM', country: string
+function deadlineDate(h) {
+  if (!h.cancelDate) return null;
+  const time = h.cancelTime || '23:59';
+  const offsetMin = tzOffset(h.country);
+  // ISO文字列を手動組み立てしてオフセット指定
+  const sign  = offsetMin >= 0 ? '+' : '-';
+  const absMin = Math.abs(offsetMin);
+  const hh = String(Math.floor(absMin / 60)).padStart(2, '0');
+  const mm = String(absMin % 60).padStart(2, '0');
+  const iso = `${h.cancelDate}T${time}:00${sign}${hh}:${mm}`;
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// 現在時刻からの残り時間情報
+function timeUntil(deadline) {
+  if (!deadline) return null;
+  const now = new Date();
+  const diffMs  = deadline - now;
+  const diffMin = Math.floor(diffMs / 60000);
+  // 「当日」= 残り24時間未満（正）。切り捨てでなく整数日数として計算
+  const diffDay = diffMs >= 0 ? Math.floor(diffMs / 86400000) : -1;
+  return { diffMs, diffMin, diffDay };
+}
+
+// ═══════════════════════════════════════════════════════
+// ステータス自動更新
+// キャンセル期限切れの自動ステータス更新
+// - free-cancel で期限切れ → nonref（キャンセル不可）
+// - reserved で cancelDate あり・期限切れ → nonref
+// ═══════════════════════════════════════════════════════
+function autoUpdateStatuses() {
+  let changed = false;
+  const now = new Date();
+  hotels.forEach(h => {
+    // 対象：free-cancel または reserved（cancelDateあり）
+    if (h.status === 'cancelled' || h.status === 'unpaid' || h.status === 'nonref') return;
+    if (!h.cancelDate) return;
+    const dl = deadlineDate(h);
+    if (!dl) return;
+    if (now > dl) {
+      const prev = h.status;
+      h.status = 'nonref';  // 期限切れ → キャンセル不可
+      changed = true;
+      console.log(`[auto] ${h.name}: ${prev} → nonref`);
+    }
+  });
+  if (changed) { persist(); }
+  return changed;
+}
+
+// ═══════════════════════════════════════════════════════
+// 定数・状態
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'eu2026-hotels';
+
+// ステータスの基本設定（ドット色・ラベル）
+const SC_BASE = {
+  reserved:      { label:'予約済',         dot:'#4caf80' },
+  'free-cancel': { label:'無料C期限前',    dot:'#4caf80' },  // 余裕あり時はグリーン
+  nonref:        { label:'キャンセル不可', dot:'#e07840' },
+  cancelled:     { label:'キャンセル済',   dot:'#6a5e48' },
+  unpaid:        { label:'未予約',         dot:'#d4a23a' },
+};
+
+// バッジクラス・ドット色を動的に決定
+function badgeInfo(h) {
+  const base = SC_BASE[h.status] || SC_BASE.unpaid;
+
+  // free-cancel または reserved+cancelDate → 残り時間で色変化
+  const hasDeadline = (h.status === 'free-cancel') ||
+                      (h.status === 'reserved' && h.cancelDate);
+  if (hasDeadline) {
+    const dl = deadlineDate(h);
+    if (!dl) return { label: base.label, cls: 'b-fcl', dot: '#4caf80' };
+    const { diffMs, diffMin, diffDay } = timeUntil(dl);
+    if (diffMs < 0)     return { label:'C期限切れ',               cls:'b-fcl-red',   dot:'#e05c5c' };
+    if (diffMin < 1440) return { label:'無料C：本日期限！',       cls:'b-fcl-red',   dot:'#e05c5c' };
+    if (diffDay <= 3)   return { label:`無料C：あと${diffDay}日`, cls:'b-fcl-amber', dot:'#e8b84b' };
+    return { label: base.label, cls: 'b-fcl', dot: '#4caf80' };
+  }
+
+  // それ以外は固定クラス
+  const clsMap = {
+    reserved: 'b-rsv', nonref: 'b-nrf',
+    cancelled: 'b-cnc', unpaid: 'b-upd',
+  };
+  return { label: base.label, cls: clsMap[h.status] || 'b-upd', dot: base.dot };
+}
+
+const FILTERS = [
+  { k:'all',         label:'すべて'      },
+  { k:'reserved',    label:'予約済'      },
+  { k:'free-cancel', label:'無料C期限前' },
+  { k:'nonref',      label:'C不可'       },
+  { k:'unpaid',      label:'未予約'      },
+  { k:'cancelled',   label:'CXL済'       },
+];
+
+let hotels       = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let nextId       = hotels.length ? Math.max(...hotels.map(h => h.id)) + 1 : 1;
+let editId       = null;
+let activeFilter = 'all';
+let ioOpen       = false;
+let delTarget    = null;
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(hotels)); } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// ユーティリティ
+// ═══════════════════════════════════════════════════════
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(s + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}(${'日月火水木金土'[d.getDay()]})`;
+}
+
+// カード表示用：キャンセル期限テキスト（free-cancel または reserved+cancelDate）
+function cancelInfo(h) {
+  if (!h.cancelDate) return null;
+  if (h.status !== 'free-cancel' && h.status !== 'reserved') return null;
+  const dl = deadlineDate(h);
+  if (!dl) return null;
+  const { diffMs, diffMin, diffDay } = timeUntil(dl);
+
+  if (diffMs < 0)    return { text:'無料C期限切れ',          cls:'exp' };
+  if (diffMin < 60)  return { text:`無料C：あと${diffMin}分！`, cls:'urg' };
+  if (diffMin < 1440) {                                          // 24時間未満＝当日
+    const hrs = Math.floor(diffMin / 60);
+    return { text:`無料C：あと${hrs}時間`, cls:'urg' };
+  }
+  if (diffDay <= 3)  return { text:`無料C：あと${diffDay}日`, cls:'urg' };
+
+  // 余裕あり：期限日を現地時刻で表示
+  const offsetMin = tzOffset(h.country);
+  const localDl = new Date(dl.getTime() + offsetMin * 60000);
+  const mo = localDl.getUTCMonth() + 1;
+  const dd = localDl.getUTCDate();
+  return { text:`無料C：${mo}/${dd}まで`, cls:'' };
+}
+
+function gmapsURL(h) {
+  const q = [h.name, h.address].filter(Boolean).join(' ').trim();
+  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '';
+}
+function sorted(list) {
+  return [...list].sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+function filtered() {
+  const l = activeFilter === 'all' ? hotels : hotels.filter(h => h.status === activeFilter);
+  return sorted(l);
+}
+
+// ═══════════════════════════════════════════════════════
+// レンダリング
+// ═══════════════════════════════════════════════════════
+function renderFilters() {
+  document.getElementById('fbar').innerHTML = FILTERS.map(f =>
+    `<button class="chip${activeFilter===f.k?' on':''}" onclick="setFilter('${f.k}')">${f.label}</button>`
+  ).join('');
+}
+function renderSum() {
+  const total  = hotels.length;
+  const booked = hotels.filter(h => ['reserved','free-cancel','nonref'].includes(h.status)).length;
+  const near   = hotels.filter(h => {
+    if (h.status !== 'free-cancel' && !(h.status === 'reserved' && h.cancelDate)) return false;
+    const dl = deadlineDate(h);
+    if (!dl) return false;
+    const { diffDay, diffMs } = timeUntil(dl);
+    return diffMs > 0 && diffDay <= 3;
+  }).length;
+  document.getElementById('sumbar').innerHTML = `
+    <div class="spill"><div class="val">${total}</div><div class="lbl">宿泊数</div></div>
+    <div class="spill"><div class="val">${booked}</div><div class="lbl">予約済</div></div>
+    <div class="spill" style="${near ? 'border-color:#8a6e2e' : ''}">
+      <div class="val" style="${near ? 'color:#d4a23a' : ''}">${near}</div>
+      <div class="lbl">C期限間近</div>
+    </div>`;
+}
+function renderList() {
+  const list = filtered();
+  if (!list.length) {
+    document.getElementById('listWrap').innerHTML = `
+      <div class="empty">
+        <i class="ti ti-building-skyscraper"></i>
+        <p>宿泊先がありません</p>
+        <small>＋ボタンで追加、または<br>⇄ボタンからJSONをインポートしてください</small>
+      </div>`;
+    return;
+  }
+  let html = '<div class="list">';
+  let last = '';
+  for (const h of list) {
+    if (h.date !== last) { html += `<div class="sec-lbl">${fmtDate(h.date)}</div>`; last = h.date; }
+    const sc  = badgeInfo(h);
+    const ci  = cancelInfo(h);
+    const gm  = gmapsURL(h);
+    const hsw = h.website && h.website.startsWith('http');
+    const gmEsc = gm.replace(/'/g, "\\'");
+    const wsEsc = hsw ? h.website.replace(/'/g, "\\'") : '';
+    html += `
+    <div class="hcard">
+      <div class="card-top">
+        <div class="sdot" style="background:${sc.dot}"></div>
+        <div class="card-info">
+          <div class="card-where">${[h.country, h.city].filter(Boolean).join(' · ')}</div>
+          <div class="card-name">${h.name}</div>
+          ${h.address   ? `<div class="card-addr"><i class="ti ti-map-pin" style="font-size:11px"></i> ${h.address}</div>` : ''}
+          ${h.phone     ? `<div class="card-phone"><i class="ti ti-phone" style="font-size:11px"></i> ${h.phone}</div>` : ''}
+          ${h.bookingno ? `<div class="card-phone"><i class="ti ti-ticket" style="font-size:11px"></i> ${h.bookingno}</div>` : ''}
+          ${h.note && !ci ? `<div class="card-note">${h.note}</div>` : ''}
+        </div>
+        <div class="card-acts">
+          ${gm ? `<button class="ibtn" onclick="window.open('${gmEsc}','_blank')" title="Google Mapsで開く"><i class="ti ti-map-2"></i></button>` : ''}
+          <button class="ibtn" onclick="openEdit(${h.id})" title="編集"><i class="ti ti-pencil"></i></button>
+          <button class="ibtn del" onclick="confirmDel(${h.id})" title="削除"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div class="card-ft">
+        <span class="badge ${sc.cls}">${sc.label}</span>
+        <span class="ci ${ci ? ci.cls : ''}">${ci ? ci.text : (h.note || '')}</span>
+        <div class="ft-links">
+          ${gm  ? `<button class="lbtn gmap" onclick="window.open('${gmEsc}','_blank')"><i class="ti ti-map-2"></i>Google Maps</button>` : ''}
+          ${hsw ? `<button class="lbtn web"  onclick="window.open('${wsEsc}','_blank')"><i class="ti ti-world"></i>Web</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('listWrap').innerHTML = html;
+}
+function render() { renderFilters(); renderSum(); renderList(); }
+function setFilter(k) { activeFilter = k; render(); }
+
+// ═══════════════════════════════════════════════════════
+// Import / Export
+// ═══════════════════════════════════════════════════════
+function toggleIO() {
+  ioOpen = !ioOpen;
+  document.getElementById('ioBar').className = 'io-bar' + (ioOpen ? ' open' : '');
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(hotels, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hotels_eu2026.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('エクスポートしました');
+}
+function importJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      hotels = data;
+      nextId = hotels.length ? Math.max(...hotels.map(h => h.id)) + 1 : 1;
+      persist();
+      checkAndRender(false);
+      toast(`${hotels.length}件インポートしました`);
+    } catch { toast('読み込みに失敗しました'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════
+// フォーム
+// ═══════════════════════════════════════════════════════
+function updateCDVisible() {
+  const s = document.getElementById('f-status').value;
+  const show = ['reserved','free-cancel'].includes(s);
+  document.getElementById('cdGroup').style.display = show ? 'block' : 'none';
+}
+
+function fillForm(h) {
+  const g = id => document.getElementById(id);
+  g('f-date').value       = h.date       || '';
+  g('f-country').value    = h.country    || '';
+  g('f-city').value       = h.city       || '';
+  g('f-name').value       = h.name       || '';
+  g('f-address').value    = h.address    || '';
+  g('f-website').value    = h.website    || '';
+  g('f-bookingno').value  = h.bookingno  || '';
+  g('f-phone').value      = h.phone      || '';
+  g('f-status').value     = h.status     || 'reserved';
+  g('f-canceldate').value = h.cancelDate || '';
+  g('f-note').value       = h.note       || '';
+  updateCDVisible();
+}
+function openAdd() {
+  editId = null;
+  document.getElementById('formTitle').textContent = '宿泊先を追加';
+  fillForm({ status: 'reserved' });
+  document.getElementById('formOv').classList.add('open');
+}
+function openEdit(id) {
+  const h = hotels.find(x => x.id === id); if (!h) return;
+  editId = id;
+  document.getElementById('formTitle').textContent = '宿泊先を編集';
+  fillForm(h);
+  document.getElementById('formOv').classList.add('open');
+}
+function closeForm() { document.getElementById('formOv').classList.remove('open'); }
+
+function saveHotel() {
+  const g = id => document.getElementById(id).value.trim();
+  const date = g('f-date'), name = g('f-name');
+  if (!date || !name) { toast('日付とホテル名は必須です'); return; }
+  const d = {
+    date, name,
+    country:    document.getElementById('f-country').value,
+    city:       g('f-city'),
+    address:    g('f-address'),
+    website:    g('f-website'),
+    bookingno:  g('f-bookingno'),
+    phone:      g('f-phone'),
+    status:     document.getElementById('f-status').value,
+    cancelDate: g('f-canceldate'),
+    cancelTime: '23:59',  // 内部固定。UIでは日付のみ入力
+    note:       g('f-note'),
+  };
+  if (editId) {
+    const i = hotels.findIndex(h => h.id === editId);
+    hotels[i] = { ...hotels[i], ...d };
+    toast('更新しました');
+  } else {
+    hotels.push({ id: nextId++, ...d });
+    toast('追加しました');
+  }
+  persist(); closeForm(); render();
+}
+document.getElementById('formOv').addEventListener('click', e => {
+  if (e.target.id === 'formOv') closeForm();
+});
+
+// ═══════════════════════════════════════════════════════
+// 削除
+// ═══════════════════════════════════════════════════════
+function confirmDel(id) {
+  const h = hotels.find(x => x.id === id); if (!h) return;
+  delTarget = id;
+  document.getElementById('confMsg').textContent =
+    `「${h.name}」を削除しますか？この操作は取り消せません。`;
+  document.getElementById('confOv').classList.add('open');
+  document.getElementById('confOk').onclick = () => {
+    hotels = hotels.filter(x => x.id !== delTarget);
+    persist(); closeConf(); render(); toast('削除しました');
+  };
+}
+function closeConf() {
+  document.getElementById('confOv').classList.remove('open');
+  delTarget = null;
+}
+document.getElementById('confOv').addEventListener('click', e => {
+  if (e.target.id === 'confOv') closeConf();
+});
+
+// ═══════════════════════════════════════════════════════
+// トースト
+// ═══════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ═══════════════════════════════════════════════════════
+// 初期化・定期チェック
+// ═══════════════════════════════════════════════════════
+function checkAndRender(showToast) {
+  const changed = autoUpdateStatuses();
+  render();
+  if (changed && showToast) toast('無料キャンセル期限が切れた宿泊先を更新しました');
+}
+
+// 起動時：render後にtoast（DOMが確実に存在するタイミングで）
+checkAndRender(true);
+
+// 1時間ごとに再チェック
+setInterval(() => checkAndRender(true), 60 * 60 * 1000);
+
+// 1分ごとに残り時間表示を更新（24時間以内のエントリーがある場合のみ）
+setInterval(() => {
+  const hasUrgent = hotels.some(h => {
+    if (h.status !== 'free-cancel' && !(h.status === 'reserved' && h.cancelDate)) return false;
+    const dl = deadlineDate(h);
+    if (!dl) return false;
+    const { diffMin, diffMs } = timeUntil(dl);
+    return diffMs > 0 && diffMin < 1440;
+  });
+  if (hasUrgent) render();
+}, 60 * 1000);
+</script>
+<script>
+// Service Worker 登録（PWA対応）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Euro2026/sw.js')
+      .then(reg => console.log('[SW] registered:', reg.scope))
+      .catch(err => console.warn('[SW] registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
